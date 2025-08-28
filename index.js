@@ -229,7 +229,6 @@ Game.prototype.moveEnemies = function() {
 
         if (this.hero.hp <= 0) {
             alert('Герой погиб! Игра окончена.');
-            // можно тут остановить интервалы врагов, заблокировать управление и т.д.
         }
     }
     this.renderMap();
