@@ -18,14 +18,14 @@ function Game() {
 Game.prototype.init = function() {
     this.fieldDiv = document.getElementsByClassName('field')[0];
 
-    this.generateMap();       // заполняем карту стенами
-    this.generateRooms();     // создаем комнаты
-    this.generateCorridors(); // создаем проходы
-    this.placeItems();        // размещаем мечи и зелья
-    this.placeHero();         // размещаем героя
-    this.placeEnemies();      // размещаем врагов
-    this.renderMap();         // отрисовываем карту
-    this.setupControls();     // настраиваем управление героя
+    this.generateMap();       // заполнение карты стенами
+    this.generateRooms();     // создание комнат
+    this.generateCorridors(); // создание проходов
+    this.placeItems();        // размещение мечей и зельев
+    this.placeHero();         // размещение героя
+    this.placeEnemies();      // размещение врагов
+    this.renderMap();         // отрисовка карты
+    this.setupControls();     // управление героя
     var self = this;
 
     // движение врагов каждые 500 мс
@@ -53,7 +53,7 @@ Game.prototype.generateRooms = function() {
         var x0 = Math.floor(Math.random() * (this.width - roomWidth));
         var y0 = Math.floor(Math.random() * (this.height - roomHeight));
 
-        // заполняем комнату полом ('tile')
+        // заполнение комнаты полом ('tile')
         for (var y = y0; y < y0 + roomHeight; y++)
             for (var x = x0; x < x0 + roomWidth; x++)
                 this.map[y][x] = 'tile';
@@ -225,6 +225,11 @@ Game.prototype.moveEnemies = function() {
 
         if (Math.abs(e.x - this.hero.x) <= 1 && Math.abs(e.y - this.hero.y) <= 1) {
             this.hero.hp -= e.attack;
+        }
+
+        if (this.hero.hp <= 0) {
+            alert('Герой погиб! Игра окончена.');
+            // можно тут остановить интервалы врагов, заблокировать управление и т.д.
         }
     }
     this.renderMap();
