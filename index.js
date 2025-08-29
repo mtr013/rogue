@@ -46,9 +46,11 @@ Game.prototype.generateMap = function() {
     }
 };
 
-// Создание случайных комнат
+// Создание случайных комнат и сохранение их центров
 Game.prototype.generateRooms = function() {
+    this.rooms = []; // массив центров комнат
     var roomCount = 5 + Math.floor(Math.random() * 6); // 5-10 комнат
+
     for (var i = 0; i < roomCount; i++) {
         var roomWidth = 3 + Math.floor(Math.random() * 6);  // 3-8
         var roomHeight = 3 + Math.floor(Math.random() * 6); // 3-8
@@ -57,23 +59,32 @@ Game.prototype.generateRooms = function() {
 
         for (var y = y0; y < y0 + roomHeight; y++)
             for (var x = x0; x < x0 + roomWidth; x++)
-                this.map[y][x] = 'tile'; // пол
+                this.map[y][x] = 'tile';
+
+        // сохраняем центр комнаты
+        var center = {
+            x: Math.floor(x0 + roomWidth / 2),
+            y: Math.floor(y0 + roomHeight / 2)
+        };
+        this.rooms.push(center);
     }
 };
 
-// Создание проходов
+// Создание коридоров, соединяющих все комнаты
 Game.prototype.generateCorridors = function() {
-    var horizontal = 3 + Math.floor(Math.random() * 3); // 3–5
-    var vertical = 3 + Math.floor(Math.random() * 3);   // 3–5
+    if (!this.rooms || this.rooms.length < 2) return;
 
-    for (var i = 0; i < horizontal; i++) {
-        var y = Math.floor(Math.random() * this.height);
-        for (var x = 0; x < this.width; x++) this.map[y][x] = 'tile';
-    }
+    for (var i = 1; i < this.rooms.length; i++) {
+        var prev = this.rooms[i - 1];
+        var curr = this.rooms[i];
 
-    for (var i = 0; i < vertical; i++) {
-        var x = Math.floor(Math.random() * this.width);
-        for (var y = 0; y < this.height; y++) this.map[y][x] = 'tile';
+        // Горизонтальный коридор
+        for (var x = Math.min(prev.x, curr.x); x <= Math.max(prev.x, curr.x); x++)
+            this.map[prev.y][x] = 'tile';
+
+        // Вертикальный коридор
+        for (var y = Math.min(prev.y, curr.y); y <= Math.max(prev.y, curr.y); y++)
+            this.map[y][curr.x] = 'tile';
     }
 };
 
