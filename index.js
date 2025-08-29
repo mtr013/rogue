@@ -5,6 +5,7 @@ function Game() {
     this.tileSize = 50;        // размер тайла в пикселях
     this.map = [];             // массив с состоянием клеток карты
     this.fieldDiv = null;      // div для отображения карты
+    this.isGameOver = false;   // состояние игры
 
     // Герой
     this.hero = { x: 0, y: 0, hp: 100, attack: 10 };
@@ -17,6 +18,7 @@ function Game() {
 // Инициализация игры
 Game.prototype.init = function() {
     this.fieldDiv = document.getElementsByClassName('field')[0];
+    this.isGameOver = false;
 
     this.generateMap();       // заполнение карты стенами
     this.generateRooms();     // создание комнат
@@ -26,11 +28,11 @@ Game.prototype.init = function() {
     this.placeEnemies();      // размещение врагов
     this.renderMap();         // отрисовка карты
     this.setupControls();     // управление героя
-    var self = this;
 
+    var self = this;
     // движение врагов каждые 500 мс
-    setInterval(function() {
-        self.moveEnemies();
+    this.enemyInterval = setInterval(function() {
+        if (!self.isGameOver) self.moveEnemies();
     }, 500);
 };
 
@@ -53,21 +55,25 @@ Game.prototype.generateRooms = function() {
         var x0 = Math.floor(Math.random() * (this.width - roomWidth));
         var y0 = Math.floor(Math.random() * (this.height - roomHeight));
 
-        // заполнение комнаты полом ('tile')
         for (var y = y0; y < y0 + roomHeight; y++)
             for (var x = x0; x < x0 + roomWidth; x++)
-                this.map[y][x] = 'tile';
+                this.map[y][x] = 'tile'; // пол
     }
 };
 
 // Создание проходов
 Game.prototype.generateCorridors = function() {
-    var count = 3 + Math.floor(Math.random() * 3); // 3-5 проходов
-    for (var i = 0; i < count; i++) {
+    var horizontal = 3 + Math.floor(Math.random() * 3); // 3–5
+    var vertical = 3 + Math.floor(Math.random() * 3);   // 3–5
+
+    for (var i = 0; i < horizontal; i++) {
         var y = Math.floor(Math.random() * this.height);
-        for (var x = 0; x < this.width; x++) this.map[y][x] = 'tile'; // горизонтальный
+        for (var x = 0; x < this.width; x++) this.map[y][x] = 'tile';
+    }
+
+    for (var i = 0; i < vertical; i++) {
         var x = Math.floor(Math.random() * this.width);
-        for (var y2 = 0; y2 < this.height; y2++) this.map[y2][x] = 'tile'; // вертикальный
+        for (var y = 0; y < this.height; y++) this.map[y][x] = 'tile';
     }
 };
 
@@ -90,16 +96,19 @@ Game.prototype.placeHero = function() {
     var pos = this.randomEmpty();
     this.hero.x = pos.x;
     this.hero.y = pos.y;
+    this.hero.hp = 100;
+    this.hero.attack = 10;
     this.map[pos.y][pos.x] = 'P';
 };
 
 // Размещение врагов
 Game.prototype.placeEnemies = function() {
+    this.enemies = [];
     for (var i = 0; i < 10; i++) {
         var pos = this.randomEmpty();
         var enemy = { x: pos.x, y: pos.y, hp: 50, attack: 5 };
         this.enemies.push(enemy);
-        this.map[pos.y][pos.x] = 'E'; // враг
+        this.map[pos.y][pos.x] = 'E';
     }
 };
 
@@ -123,7 +132,6 @@ Game.prototype.renderMap = function() {
             var type = this.map[y][x];
 
             if (type === 'W') tile.className += ' tileW';
-            else if (type === 'tile') tile.className += '';
             else if (type === 'P') tile.className += ' tileP';
             else if (type === 'HP') tile.className += ' tileHP';
             else if (type === 'SW') tile.className += ' tileSW';
@@ -132,7 +140,6 @@ Game.prototype.renderMap = function() {
             tile.style.left = (x * this.tileSize) + 'px';
             tile.style.top = (y * this.tileSize) + 'px';
 
-            // полоска здоровья для героя
             if (type === 'P') {
                 var healthDiv = document.createElement('div');
                 healthDiv.className = 'health';
@@ -140,7 +147,6 @@ Game.prototype.renderMap = function() {
                 tile.appendChild(healthDiv);
             }
 
-            // полоска здоровья для врага
             if (type === 'E') {
                 for (var i = 0; i < this.enemies.length; i++) {
                     var e = this.enemies[i];
@@ -163,14 +169,15 @@ Game.prototype.renderMap = function() {
 Game.prototype.setupControls = function() {
     var self = this;
     document.addEventListener('keydown', function(e) {
-        var dx = 0, dy = 0;
+        if (self.isGameOver) return;
 
+        var dx = 0, dy = 0;
         if (e.key === 'w') dy = -1;
         else if (e.key === 's') dy = 1;
         else if (e.key === 'a') dx = -1;
         else if (e.key === 'd') dx = 1;
         else if (e.key === ' ') {
-            self.heroAttack(); // пробел = атака
+            self.heroAttack();
             return;
         }
 
@@ -228,7 +235,9 @@ Game.prototype.moveEnemies = function() {
         }
 
         if (this.hero.hp <= 0) {
+            this.isGameOver = true;
             alert('Герой погиб! Игра окончена.');
+            break;
         }
     }
     this.renderMap();
@@ -238,3 +247,10 @@ Game.prototype.moveEnemies = function() {
 Game.prototype.inBounds = function(x, y) {
     return x >= 0 && x < this.width && y >= 0 && y < this.height;
 };
+
+// Кнопка Restart
+document.getElementById('restartBtn').addEventListener('click', function() {
+    clearInterval(game.enemyInterval); // остановка старого интервала
+    game = new Game();
+    game.init();
+});

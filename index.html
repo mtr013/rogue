@@ -36,11 +36,20 @@ h1 { font-family: "Playfair Display"; font-size: 30px; padding: 10px 0px; margin
 		<div class="cl"></div>
 		<!--h1>Инвентарь</h1>
 		<div class="inventory-box"><div class="inventory"></div></div-->
-
+		<button id="restartBtn" style="margin-top:10px; padding:8px 16px; font-size:16px;">Restart</button>
 		<script>
-
-			var game=new Game();
+			var game = new Game();
 			game.init();
+
+			// Функция рестарта
+			function restartGame() {
+				if (game.enemyInterval) clearInterval(game.enemyInterval);
+				game = new Game();
+				game.init();
+			}
+
+			// Вешаем обработчик на кнопку Restart
+			document.getElementById('restartBtn').addEventListener('click', restartGame);
 		</script>
 	</body>
 </html>
